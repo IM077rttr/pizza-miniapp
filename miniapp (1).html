@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bellesimo Pizza</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>body{font-family:system-ui,sans-serif}</style>
+<style>
+  :root {
+    --red: #E8001C;
+    --red-dark: #B50016;
+    --red-light: #FFF0F2;
+    --yellow: #FFD600;
+    --bg: #F7F5F0;
+    --white: #FFFFFF;
+    --text: #1A1A1A;
+    --text-muted: #888;
+    --border: #EBEBEB;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 90px; }
+
+  /* HEADER */
+  .header { background: var(--red); color: white; padding: 16px 16px 20px; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+  .logo span { color: var(--yellow); }
+  .branch-pill { background: rgba(255,255,255,0.2); border-radius: 100px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .cart-btn-header { background: var(--yellow); color: var(--red-dark); border: none; border-radius: 100px; padding: 6px 14px 6px 10px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+  /* CATEGORY TABS */
+  .cats { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+  .cats::-webkit-scrollbar { display: none; }
+  .cat-tab { flex-shrink: 0; padding: 7px 16px; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; border: 2px solid var(--border); background: white; color: var(--text-muted); transition: all 0.15s; white-space: nowrap; }
+  .cat-tab.active { background: var(--red); color: white; border-color: var(--red); }
+
+  /* PRODUCTS */
+  .section-title { padding: 16px 16px 8px; font-size: 18px; font-weight: 800; }
+  .products { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px; }
+  .product-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.15s; }
+  .product-card:active { transform: scale(0.97); }
+  .product-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #f0ede8; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+  .product-body { padding: 10px; }
+  .product-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .product-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; }
+  .product-price { font-size: 15px; font-weight: 800; color: var(--red); }
+  .add-btn { background: var(--red); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; transition: transform 0.1s; }
+  .add-btn:active { transform: scale(0.88); }
+  .badge-promo { background: var(--red); color: white; font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 6px; display: inline-block; margin-bottom: 4px; }
+
+  /* CART BOTTOM BAR */
+  .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--red); padding: 12px 16px 20px; display: none; z-index: 200; }
+  .cart-bar.show { display: block; }
+  .cart-bar-btn { background: white; color: var(--red); border: none; border-radius: 14px; width: 100%; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+  .cart-bar-left { display: flex; align-items: center; gap: 8px; }
+  .cart-count-badge { background: var(--red); color: white; border-radius: 50%; width: 26px; height: 26px; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+  /* CART PAGE */
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: block; }
+  .page-header { background: white; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .back-btn { background: var(--bg); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .page-title { font-size: 18px; font-weight: 800; }
+  .cart-items { padding: 12px 16px; }
+  .cart-item { background: white; border-radius: var(--radius); padding: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .cart-item-emoji { font-size: 40px; flex-shrink: 0; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .cart-item-price { font-size: 13px; color: var(--red); font-weight: 700; }
+  .qty-control { display: flex; align-items: center; gap: 8px; }
+  .qty-btn { background: var(--red-light); color: var(--red); border: none; border-radius: 8px; width: 30px; height: 30px; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .qty-num { font-size: 15px; font-weight: 800; min-width: 20px; text-align: center; }
+
+  /* SUMMARY */
+  .summary-card { background: white; border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
+  .summary-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--red); }
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+  .summary-row.total { font-weight: 800; font-size: 16px; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 12px; }
+  .branch-info { font-size: 13px; color: var(--text-muted); }
+
+  /* PROMO */
+  .promo-row { display: flex; gap: 8px; margin-top: 12px; }
+  .promo-input { flex: 1; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600; outline: none; }
+  .promo-input:focus { border-color: var(--red); }
+  .promo-btn { background: var(--red); color: white; border: none; border-radius: var(--radius-sm); padding: 10px 16px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; }
+
+  /* ORDER BTN */
+  .order-btn { margin: 0 16px 24px; background: var(--red); color: white; border: none; border-radius: 14px; width: calc(100% - 32px); padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; transition: transform 0.1s; }
+  .order-btn:active { transform: scale(0.97); }
+  .add-more-btn { margin: 0 16px 12px; background: white; color: var(--red); border: 1.5px solid var(--red); border-radius: 14px; width: calc(100% - 32px); padding: 13px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: 'Nunito', sans-serif; }
+
+  /* SUCCESS */
+  .success-page { text-align: center; padding: 60px 24px; }
+  .success-icon { font-size: 80px; margin-bottom: 16px; }
+  .success-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+  .success-desc { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+  .success-order-num { background: var(--red-light); color: var(--red); padding: 8px 20px; border-radius: 100px; font-size: 16px; font-weight: 800; display: inline-block; margin: 16px 0; }
+
+  /* DELIVERY TYPE SELECTOR */
+  .delivery-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
+  .delivery-opt { background: white; border: 2px solid var(--border); border-radius: var(--radius); padding: 16px 12px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .delivery-opt.selected { border-color: var(--red); background: var(--red-light); }
+  .delivery-opt-icon { font-size: 32px; margin-bottom: 6px; }
+  .delivery-opt-name { font-size: 14px; font-weight: 800; }
+  .delivery-opt-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .empty-cart { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+  .empty-cart-icon { font-size: 60px; margin-bottom: 12px; }
+  .empty-cart-text { font-size: 16px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- MAIN PAGE -->
+<div class="page active" id="page-main">
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">Bellesimo <span>Pizza</span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="branch-pill" onclick="alert('Filial tanlash')">📍 Chigatoy</div>
+        <button class="cart-btn-header" onclick="openCart()" id="header-cart-btn" style="display:none;">
+          🛒 <span id="header-cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cats" id="cat-tabs">
+    <div class="cat-tab active" onclick="filterCat('all',this)">Hammasi</div>
+    <div class="cat-tab" onclick="filterCat('pizza',this)">🍕 Pizza</div>
+    <div class="cat-tab" onclick="filterCat('burger',this)">🍔 Burger</div>
+    <div class="cat-tab" onclick="filterCat('lavash',this)">🌯 Lavash</div>
+    <div class="cat-tab" onclick="filterCat('snack',this)">🍟 Sneklar</div>
+    <div class="cat-tab" onclick="filterCat('drink',this)">🥤 Ichimlik</div>
+    <div class="cat-tab" onclick="filterCat('dessert',this)">🍰 Shirinlik</div>
+  </div>
+
+  <div class="section-title" id="section-label">Barcha mahsulotlar</div>
+  <div class="products" id="products-grid"></div>
+</div>
+
+<!-- CART PAGE -->
+<div class="page" id="page-cart">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('page-cart')">←</button>
+    <div class="page-title">Savatingiz</div>
+  </div>
+
+  <div id="cart-content"></div>
+</div>
+
+<!-- SUCCESS PAGE -->
+<div class="page" id="page-success">
+  <div class="success-page">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Buyurtma qabul qilindi!</div>
+    <div class="success-order-num" id="order-num">#12345</div>
+    <div class="success-desc">Buyurtmangiz tayyorlanmoqda.<br>Tez orada yetkazib beramiz!</div>
+    <br><br>
+    <button class="order-btn" onclick="backToMain()">Asosiy menyu</button>
+  </div>
+</div>
+
+<!-- CART BOTTOM BAR -->
+<div class="cart-bar" id="cart-bar">
+  <button class="cart-bar-btn" onclick="openCart()">
+    <div class="cart-bar-left">
+      <div class="cart-count-badge" id="cart-badge">0</div>
+      <span>Savatni ko'rish</span>
+    </div>
+    <span id="cart-total-bar">0 so'm</span>
+  </button>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const PRODUCTS = [
+  { id:1, cat:'pizza', emoji:'🍕', name:'Margarita', desc:'Tomat sous, mozzarella, bazilika', price:45000, promo:'2+1' },
+  { id:2, cat:'pizza', emoji:'🍕', name:'Pepperoni', desc:'Tomat sous, pepperoni, mozzarella', price:55000 },
+  { id:3, cat:'pizza', emoji:'🍕', name:'To\'rt pishloqli', desc:'Mozzarella, cheddar, parmezan, brie', price:65000 },
+  { id:4, cat:'burger', emoji:'🍔', name:'Classic Burger', desc:'Mol go\'shti, salat, tomat, sous', price:38000 },
+  { id:5, cat:'burger', emoji:'🍔', name:'Double Smash', desc:'2x patty, cheddar, karamelized piyoz', price:52000, promo:'Hit' },
+  { id:6, cat:'lavash', emoji:'🌯', name:'Tovuqli lavash', desc:'Grilled tovuq, sabzavot, sous', price:28000 },
+  { id:7, cat:'lavash', emoji:'🌯', name:'Shawarma', desc:'Mol go\'shti, kartoshka, sous', price:32000 },
+  { id:8, cat:'snack', emoji:'🍟', name:'Kartoshka fri', desc:'Crispy fri, sous bilan', price:18000 },
+  { id:9, cat:'snack', emoji:'🍗', name:'Nuggets x8', desc:'Tovuq nuggets, 8 dona', price:24000, promo:'2+1' },
+  { id:10, cat:'drink', emoji:'🥤', name:'Pepsi 0.5L', desc:'Sovuq Pepsi', price:8000 },
+  { id:11, cat:'drink', emoji:'🍹', name:'Limonad', desc:'Uy limonadi, limon-nanali', price:15000 },
+  { id:12, cat:'dessert', emoji:'🎂', name:'Cheesecake', desc:'New York cheesecake, toʻliq', price:35000 },
+];
+
+let cart = {};
+let currentCat = 'all';
+
+function fmt(n) { return n.toLocaleString('uz-UZ') + ' so\'m'; }
+
+function renderProducts(cat) {
+  const grid = document.getElementById('products-grid');
+  const label = document.getElementById('section-label');
+  const filtered = cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === cat);
+  const catNames = {all:'Barcha mahsulotlar',pizza:'🍕 Pizza',burger:'🍔 Burgerlar',lavash:'🌯 Lavashlar',snack:'🍟 Sneklar',drink:'🥤 Ichimliklar',dessert:'🍰 Shirinliklar'};
+  label.textContent = catNames[cat] || 'Mahsulotlar';
+  grid.innerHTML = filtered.map(p => `
+    <div class="product-card" onclick="addToCart(${p.id})">
+      <div class="product-img">${p.emoji}</div>
+      <div class="product-body">
+        ${p.promo ? `<div class="badge-promo">${p.promo}</div>` : ''}
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">${fmt(p.price)}</div>
+          <button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts(cat);
+}
+
+function addToCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  updateCartUI();
+  const btn = event?.target?.closest('.add-btn');
+  if (btn) { btn.style.transform = 'scale(1.4)'; setTimeout(()=>btn.style.transform='',200); }
+}
+
+function removeFromCart(id) {
+  if (cart[id] > 1) cart[id]--;
+  else delete cart[id];
+  updateCartUI();
+  renderCart();
+}
+
+function getTotal() {
+  return Object.entries(cart).reduce((sum, [id, qty]) => {
+    const p = PRODUCTS.find(x => x.id == id);
+    return sum + (p ? p.price * qty : 0);
+  }, 0);
+}
+
+function getCount() {
+  return Object.values(cart).reduce((a, b) => a + b, 0);
+}
+
+function updateCartUI() {
+  const count = getCount();
+  const total = getTotal();
+  document.getElementById('cart-badge').textContent = count;
+  document.getElementById('cart-bar').classList.toggle('show', count > 0);
+  document.getElementById('cart-total-bar').textContent = fmt(total);
+  const hBtn = document.getElementById('header-cart-btn');
+  hBtn.style.display = count > 0 ? 'flex' : 'none';
+  document.getElementById('header-cart-count').textContent = count;
+}
+
+function renderCart() {
+  const content = document.getElementById('cart-content');
+  const count = getCount();
+  if (count === 0) {
+    content.innerHTML = `<div class="empty-cart"><div class="empty-cart-icon">🛒</div><div class="empty-cart-text">Savat bo'sh</div></div>`;
+    return;
+  }
+  const items = Object.entries(cart).map(([id, qty]) => {
+    const p = PRODUCTS.find(x => x.id == id);
+    if (!p) return '';
+    return `<div class="cart-item">
+      <div class="cart-item-emoji">${p.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${p.name}</div>
+        <div class="cart-item-price">${fmt(p.price * qty)}</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="removeFromCart(${p.id})">−</button>
+        <div class="qty-num">${qty}</div>
+        <button class="qty-btn" onclick="addToCart(${p.id})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="cart-items">${items}</div>
+    <div class="summary-card">
+      <div class="summary-title">Sizning buyurtmangiz</div>
+      <div class="summary-row"><span class="branch-info">Restoran</span><span>Chigatoy</span></div>
+      <div class="summary-row"><span>Tovarlar</span><span>${fmt(getTotal())}</span></div>
+      <div class="summary-row"><span>Yetkazib berish</span><span style="color:green;font-weight:700;">Bepul</span></div>
+      <div class="summary-row total"><span>Jami</span><span style="color:var(--red)">${fmt(getTotal())}</span></div>
+      <div class="promo-row">
+        <input class="promo-input" placeholder="Promokodni kiriting" id="promo-input">
+        <button class="promo-btn" onclick="applyPromo()">Kiritish</button>
+      </div>
+    </div>
+    <button class="add-more-btn" onclick="closePage('page-cart')">+ Yana mahsulot qo'shish</button>
+    <button class="order-btn" onclick="placeOrder()">Buyurtma berish</button>
+  `;
+}
+
+function applyPromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  if (code === 'PIZZA10') alert('✅ 10% chegirma qo\'llanildi!');
+  else alert('❌ Promokod topilmadi');
+}
+
+function openCart() {
+  renderCart();
+  document.getElementById('page-main').classList.remove('active');
+  document.getElementById('page-cart').classList.add('active');
+}
+
+function closePage(id) {
+  document.getElementById(id).classList.remove('active');
+  document.getElementById('page-main').classList.add('active');
+}
+
+function placeOrder() {
+  if (getCount() === 0) return;
+  const orderNum = '#' + Math.floor(10000 + Math.random() * 90000);
+  const orderData = {
+    order_number: orderNum,
+    items: Object.entries(cart).map(([id, qty]) => {
+      const p = PRODUCTS.find(x => x.id == id);
+      return { name: p.name, qty, price: p.price * qty };
+    }),
+    total: getTotal(),
+    branch: 'Chigatoy',
+    timestamp: new Date().toISOString()
+  };
+
+  // n8n ga zakaz yuborish
+  fetch('https://sherzod009.app.n8n.cloud/webhook/pizza-bot', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({type:'new_order', ...orderData, chat_id: tg?.initDataUnsafe?.user?.id || null})
+  }).catch(()=>{});
+
+  if (tg) { tg.sendData(JSON.stringify(orderData)); }
+
+  document.getElementById('order-num').textContent = orderNum;
+  document.getElementById('page-cart').classList.remove('active');
+  document.getElementById('page-success').classList.add('active');
+  cart = {};
+  updateCartUI();
+}
+
+function backToMain() {
+  document.getElementById('page-success').classList.remove('active');
+  document.getElementById('page-main').classList.add('active');
+}
+
+renderProducts('all');
+</script>
+</body>
+</html>
